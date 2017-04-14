@@ -60,7 +60,7 @@ class MyParser(argparse.ArgumentParser):
                 python apache_redirector_setup.py --malleable="<Path to C2 Profile" --staging_uri="/updates/" --block_url="https://google.com" --block_mode="redirect" --allow_url="<Teamserver Address>" --allow_mode="proxy" 
             
             Setting up Mobile user redirection:
-                python apache_redirector_setup.py --mobile_url="<Mobile Payload>" --teamserver="<IP ADDRESS/DNS NAME>" --mobile_mode=proxy --allow_url="<Teamserver Address>" --allow_mode="proxy"
+                python apache_redirector_setup.py --mobile_url="<Mobile Payload>" --mobile_mode=proxy --allow_url="<Teamserver Address>" --allow_mode="proxy"
             
             Setting up IR Blacklisting:
                 python apache_redirector_setup.py --ir --block_mode=redirect --block_url="https://google.com" --allow_url="<Teamserver Address>" --allow_mode="proxy"
@@ -176,7 +176,7 @@ def firstTimeSetup(silent,server_root="/var/www/"):
     if silent:
         print green + "Configuration Complete!" + colorEnd
 
-def mobile_rule(teamserverIP,mobile_URL,mobile_mode,server_root="/var/www/"):
+def mobile_rule(mobile_URL,mobile_mode,server_root="/var/www/"):
 
     if os.path.isfile((server_root + "html/.htaccess")):
         old = open((server_root + "html/.htaccess"),"r")
@@ -184,7 +184,7 @@ def mobile_rule(teamserverIP,mobile_URL,mobile_mode,server_root="/var/www/"):
         for line in old:
             oldRules.append(line)
         old.close()
-        rule = '\nRewriteCond %{HTTP_USER_AGENT} "android|blackberry|googlebot-mobile|iemobile|ipad|iphone|ipod|opera mobile|palmos|webos" [NC]\n'
+        rule = 'RewriteCond %{HTTP_USER_AGENT} "android|blackberry|googlebot-mobile|iemobile|ipad|iphone|ipod|opera mobile|palmos|webos" [NC]\n'
 
         if mobile_mode == "redirect":
             rule = rule + 'RewriteRule ^.*$ %s [L,R=302]\n' % mobile_URL
@@ -200,8 +200,6 @@ def mobile_rule(teamserverIP,mobile_URL,mobile_mode,server_root="/var/www/"):
         rule = "RewriteEngine On\n"
         rule = rule + 'RewriteCond %{HTTP_USER_AGENT} "android|blackberry|googlebot-mobile|iemobile|ipad|iphone|ipod|opera mobile|palmos|webos" [NC]\n'
         rule = rule + 'RewriteRule ^.*$ %s [P]\n' % mobile_URL
-        rule = rule + 'RewriteRule ^.*$ http://' + str(teamserverIP) + '%{REQUEST_URI} [P]'
-
         ruleFile = open((server_root + "html/.htaccess"), "w")
         ruleFile.write(rule)
         ruleFile.close()
@@ -238,7 +236,7 @@ def irSetup(block_url,block_mode,server_root="/var/www/"):
         ruleFile.write(rule)
         ruleFile.close()
 
-def ipBlacklisting(ips,teamserverIP,block_url,block_mode,server_root="/var/www/"):
+def ipBlacklisting(ips,block_url,block_mode,server_root="/var/www/"):
     if os.path.isfile((server_root + "html/.htaccess")):
         old = open((server_root + "html/.htaccess"),"r")
         oldRules = []
@@ -298,7 +296,6 @@ def ipBlacklisting(ips,teamserverIP,block_url,block_mode,server_root="/var/www/"
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [L,R=302]\n'
         elif block_mode == "proxy":
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
-        rule = rule + 'RewriteRule ^.*$ http://' + str(teamserverIP) + '%{REQUEST_URI} [P]\n'
         ruleFile = open("/var/www/html/.htaccess", "w")
         ruleFile.write(rule)
         ruleFile.close()
@@ -558,48 +555,45 @@ def processing(redirection_options):
             if (redirection_options['block_url'] != None) and (redirection_options['block_mode'] != None) and (redirection_options['allow_url'] != None) and (redirection_options['allow_mode'] != None):
                 Staging(redirection_options['malleable'],redirection_options['block_url'],redirection_options['block_mode'], redirection_options['allow_url'],redirection_options['allow_mode'],redirection_options['staging_uri'], redirection_options['server_root'])
             else:
-                print "In order to setup malleable C2 with staging support use the following flags, --malleable --staging_uri --block_url --block_mode --allow_url, --allow_mode"
+                print red + "In order to setup malleable C2 with staging support use the following flags, --malleable --staging_uri --block_url --block_mode --allow_url, --allow_mode" + colorEnd
         else:
-            print "In order to use malleable C2, --malleable --block_url and --block_mode must be used"
+            print red + "In order to use malleable C2, --malleable --block_url and --block_mode must be used" + colorEnd
     
     if redirection_options['ir'] != None:
         if (redirection_options['block_url'] != None) and (redirection_options['block_mode'] != None):
             irSetup(redirection_options['block_url'],redirection_options['block_mode'],redirection_options['server_root'])
         else:
-            print "In order to set IR Blocking, --block_url and --block_mode must be used"
+            print red + "In order to set IR Blocking, --block_url and --block_mode must be used" + colorEnd
 
     if redirection_options['ip_blacklist'] != None:
-        if (redirection_options['block_url'] != None) and (redirection_options['teamserver'] != None) and (redirection_options['block_mode'] != None):
-            ipBlacklisting(redirection_options['ip_blacklist'],redirection_options['teamserver'],redirection_options['block_url'],redirection_options['block_mode'],redirection_options['server_root'])
+        if (redirection_options['block_url'] != None) and (redirection_options['block_mode'] != None):
+            ipBlacklisting(redirection_options['ip_blacklist'],redirection_options['block_url'],redirection_options['block_mode'],redirection_options['server_root'])
         else:
-            print "In order to set IP Blocking, --block_url, --block_mode, --ip_blacklist, and --teamserver must be used"
+            print red + "In order to set IP Blocking, --block_url, --block_mode, and --ip_blacklist must be used" + colorEnd
 
     if redirection_options['block_ua']!= None:
         if (redirection_options['block_mode'] != None) & (redirection_options['block_url'] != None):
             blockUA(redirection_options['block_ua'],redirection_options['block_url'],redirection_options['block_mode'],redirection_options['server_root'])
         else:
-            print "In order to block a specific useragent use, --block_ua, --block_mode and --block_url must be used"
+            print red + "In order to block a specific useragent use, --block_ua, --block_mode and --block_url must be used" + colorEnd
     
     if redirection_options['valid_uris']!= None:
         if (redirection_options['block_url'] != None) & (redirection_options['block_mode'] != None):
             validURI(redirection_options['valid_uris'],redirection_options['block_url'],redirection_options['block_mode'],redirection_options['server_root'])
         else:
-            print "In order to set URI whitelisting use, --valid_uris, --block_url and --block_mode must be used"
+            print red + "In order to set URI whitelisting use, --valid_uris, --block_url and --block_mode must be used" + colorEnd
 
     if redirection_options['mobile_url']!= None:
-        if (redirection_options['mobile_mode'] != None) & (redirection_options['teamserver'] != None):
-            mobile_rule(redirection_options['teamserver'],redirection_options['mobile_url'],redirection_options['mobile_mode'],redirection_options['server_root'])
+        if (redirection_options['mobile_mode'] != None):
+            mobile_rule(redirection_options['mobile_url'],redirection_options['mobile_mode'],redirection_options['server_root'])
         else:
-            print "In order to set mobile redirection use, --mobile_url, --mobile_mode and --teamserver must be used"
-
-
-
+            print red + "In order to set mobile redirection use, --mobile_url, and --mobile_mode must be used" + colorEnd
 
     if redirection_options['allow_url']!= None:
         if redirection_options['allow_mode'] !=None:
             allowClause(redirection_options['allow_url'],redirection_options['allow_mode'],redirection_options['server_root'])
         else:
-            print "In order to set an allow rule use,  --allow_url, and --allow_mode"
+            print red + "In order to set an allow rule use,  --allow_url, and --allow_mode" + colorEnd
     
     if os.path.isfile((redirection_options['server_root'] + "html/.htaccess")):
         readRules(redirection_options['silent'],redirection_options['server_root'])
