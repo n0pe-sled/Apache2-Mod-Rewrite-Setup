@@ -2,69 +2,77 @@
 
 import sys,os,argparse,subprocess,re #native
 
-help = '''Apache Redirector Setup Script -
-Configures a host to perform mod_rewrite redirection based on provided parameters
-
-Parameters:
-
-    --h                         Display's this menu
-    --silent                    Prevent all standard output
-    --teamserver				IP Address of the teamserver
-
-    --block_url					URL or file to redirect/proxy blocked requests to
-    --block_mode				proxy or redirect blocked requests (it's recommended you only proxy to resources you control)\
-
-    --allow_url					URL or file to redirect/proxy allowed requests to
-    --allow_mode				proxy or redirect allowed requests (it's recommended you only proxy to resources you control)
-
-    --ip_blacklist				block provided IPs or CIDR ranges. Semicolon separate (ie 1.1.1.1;2.2.2.2/8)
-    --ir						block common IR user agents (wget;curl;HTTrack;crawl;google;bot;b\-o\-t;spider;baidu;python)
-    --block_ua					block provided user agents
-
-    --mobile_url				URL to redirect mobile users to
-    --mobile_mode				proxy or redirect mobile users to URL
-
-    --valid_uris				Semicolon-seperated list of valid URIs, all other requests are blocked
-
-    --malleable 				Cobalt Strike Malleable C2 profile to allow. Blocks all other requests.
-    --staging_uri               Uri of the stager being used in cobalt strike
-
-    --backup				 	Backs up current apache2 config and the html folder with the .bak extension.
+class MyParser(argparse.ArgumentParser):
     
-    Order of processing
-
-        1: Malleable C2
-
-        or
-
-        1: IR Blacklisting
-        2: IP Blacklisting
-        3: UA Blacklisting
-        4: URI Blacklisting
-        5: Mobile Proxy/Redirect
-        6: Allow Clause
-
-
-Usage Examples:
-    Setting up a Malleable C2 Redirector:
-        python apache_redirector_setup.py --malleable="<Path to C2 Profile>" --block_url="https://google.com" --block_mode="redirect" --allow_url="Teamserver Address" --allow_mode="proxy"
+    def error(self, message):
+        self.print_help()
+        sys.exit(2)
     
-    Setting up a Malleable C2 Redirector w/ Staging:
-        python apache_redirector_setup.py --malleable="<Path to C2 Profile" --staging_uri="/updates/" --block_url="https://google.com" --block_mode="redirect" --allow_url="<Teamserver Address>" --allow_mode="proxy" 
-    
-    Setting up Mobile user redirection:
-        python apache_redirector_setup.py --mobile_url="<Mobile Payload>" --teamserver="<IP ADDRESS/DNS NAME>" --mobile_mode=proxy --allow_url="<Teamserver Address>" --allow_mode="proxy"
-    
-    Setting up IR Blacklisting:
-        python apache_redirector_setup.py --ir --block_mode=redirect --block_url="https://google.com" --allow_url="<Teamserver Address>" --allow_mode="proxy"
-    
-    Setting up IP Blacklisting:
-        python apache_redirector_setup.py --ip_blacklist="<IP ADDRESS>" --block_mode="redirect" --block_url="https://google.com" --teamserver="<TEAMSERVER IP/DNS NAME>"
+    def print_help(self, file=None):
+        help1 = '''Apache Redirector Setup Script -
+        Configures a host to perform mod_rewrite redirection based on provided parameters
 
-    Setting up Mobile Redirection, IR Blacklisting, and IP Blacklisting:
-        python apache_redirector_setup.py --ip_blacklist="<IP ADDRESS>" --ip_blacklist="<IP ADDRESS>" --mobile_url="<Mobile Payload>" --teamserver="<IP ADDRESS/DNS NAME>" --mobile_mode=proxy --allow_url="<Teamserver Address>" --allow_mode="proxy"
-'''
+        Parameters:
 
+            --h                         Display's this menu
+            --silent                    Prevent all standard output
+            --teamserver				IP Address of the teamserver
+
+            --block_url					URL or file to redirect/proxy blocked requests to
+            --block_mode				proxy or redirect blocked requests (it's recommended you only proxy to resources you control)\
+
+            --allow_url					URL or file to redirect/proxy allowed requests to
+            --allow_mode				proxy or redirect allowed requests (it's recommended you only proxy to resources you control)
+
+            --ip_blacklist				block provided IPs or CIDR ranges. Semicolon separate (ie 1.1.1.1;2.2.2.2/8)
+            --ir						block common IR user agents (wget;curl;HTTrack;crawl;google;bot;b\-o\-t;spider;baidu;python)
+            --block_ua					block provided user agents
+
+            --mobile_url				URL to redirect mobile users to
+            --mobile_mode				proxy or redirect mobile users to URL
+
+            --valid_uris				Semicolon-seperated list of valid URIs, all other requests are blocked
+
+            --malleable 				Cobalt Strike Malleable C2 profile to allow. Blocks all other requests.
+            --staging_uri               Uri of the stager being used in cobalt strike
+
+            --backup				 	Backs up current apache2 config and the html folder with the .bak extension.
+            
+            Order of processing
+
+                1: Malleable C2
+
+                or
+
+                1: IR Blacklisting
+                2: IP Blacklisting
+                3: UA Blacklisting
+                4: URI Blacklisting
+                5: Mobile Proxy/Redirect
+                6: Allow Clause
+
+
+        Usage Examples:
+            Setting up a Malleable C2 Redirector:
+                python apache_redirector_setup.py --malleable="<Path to C2 Profile>" --block_url="https://google.com" --block_mode="redirect" --allow_url="Teamserver Address" --allow_mode="proxy"
+            
+            Setting up a Malleable C2 Redirector w/ Staging:
+                python apache_redirector_setup.py --malleable="<Path to C2 Profile" --staging_uri="/updates/" --block_url="https://google.com" --block_mode="redirect" --allow_url="<Teamserver Address>" --allow_mode="proxy" 
+            
+            Setting up Mobile user redirection:
+                python apache_redirector_setup.py --mobile_url="<Mobile Payload>" --teamserver="<IP ADDRESS/DNS NAME>" --mobile_mode=proxy --allow_url="<Teamserver Address>" --allow_mode="proxy"
+            
+            Setting up IR Blacklisting:
+                python apache_redirector_setup.py --ir --block_mode=redirect --block_url="https://google.com" --allow_url="<Teamserver Address>" --allow_mode="proxy"
+            
+            Setting up IP Blacklisting:
+                python apache_redirector_setup.py --ip_blacklist="<IP ADDRESS>" --block_mode="redirect" --block_url="https://google.com" --teamserver="<TEAMSERVER IP/DNS NAME>"
+
+            Setting up Mobile Redirection, IR Blacklisting, and IP Blacklisting:
+                python apache_redirector_setup.py --ip_blacklist="<IP ADDRESS>" --ip_blacklist="<IP ADDRESS>" --mobile_url="<Mobile Payload>" --teamserver="<IP ADDRESS/DNS NAME>" --mobile_mode=proxy --allow_url="<Teamserver Address>" --allow_mode="proxy"
+        '''
+        print help1
+        exit(-1)
 
 redirection_options = {}
 green = '\x1b[6;30;42m'
@@ -78,7 +86,7 @@ ir_string = 'wget;curl;HTTrack;crawl;google;bot;b\-o\-t;spider;baidu;python'
 
 def htaccessCheck(silent,server_root="/var/www/"):
     if os.path.isfile((server_root + "html/.htaccess")):
-        if not silent:
+        if silent:
             print red + "An .htaccess file was found in the "+ server_root +" webroot!  This file will be overwritten with a new ruleset with this tool if you continue!" + colorEnd
             prompt = raw_input(yellow + "Would you like to backup this file before continuing?(Y/N):" + colorEnd + " ")
             if (prompt.lower() == ("y")) or (prompt.lower() == ("yes")):
@@ -104,7 +112,7 @@ def backupFile(filename):
 
 def checkSetup(silent,server_root="/var/www/"):
     try:
-        if not silent:
+        if silent:
             print green + "Checking if Apache Server is Configured Correctly" + colorEnd
         setup = False
         config = open("/etc/apache2/apache2.conf", "r")
@@ -119,18 +127,18 @@ def checkSetup(silent,server_root="/var/www/"):
             configLineNumber += 1
         if "AllowOverride All" in apache2config[configEditLineNumber + 2]:
             setup = True
-            if not silent:
+            if silent:
                 print green + "Mod_rewrite is enabled for the "+ server_root +" webroot" + colorEnd
                 print green + "Apache Server Configured Correctly!" + colorEnd +"\n" 
             return setup
         else:
-            if not silent:
+            if silent:
                 print yellow + "Mod_rewrite is not enabled for the "+ server_root +" webroot" + colorEnd
                 print yellow + "Configuring the "+ server_root +" for Apache Mod-Rewrite!"
             setup = False
             return setup
     except IOError:
-        if not silent:
+        if silent:
             print yellow + "Apache2 is not installed,  Installing Apache2 and configuring Mod-Rewrite Now" + colorEnd
         setup = False
         return setup
@@ -138,11 +146,11 @@ def checkSetup(silent,server_root="/var/www/"):
 def backupConfig(silent,server_root="/var/www/"):
     if os.path.isfile("/etc/apache2/apache2.conf"):
         backupFile("/etc/apache2/apache2.conf")
-        if not silent:
+        if silent:
             print green + "Apache2 Configuration backed up" + colorEnd
     if os.path.isfile((server_root + "html/.htaccess")):
         backupFile((server_root + "html/.htaccess"))
-        if not silent:
+        if silent:
             print green + ".htaccess file located at " + (server_root + "html/.htaccess") + " has been saved at " + (server_root + "html/.htaccess.bak") + colorEnd
 
 def firstTimeSetup(silent,server_root="/var/www/"):
@@ -165,10 +173,10 @@ def firstTimeSetup(silent,server_root="/var/www/"):
     apache2config.close()
     subprocess.call(["service","apache2","restart"])
     subprocess.call(["service","apache2","status"])
-    if not silent:
+    if silent:
         print green + "Configuration Complete!" + colorEnd
 
-def mobile_rule(mobile_URL,mobile_mode,server_root="/var/www/"):
+def mobile_rule(teamserverIP,mobile_URL,mobile_mode,server_root="/var/www/"):
 
     if os.path.isfile((server_root + "html/.htaccess")):
         old = open((server_root + "html/.htaccess"),"r")
@@ -531,25 +539,13 @@ def allowClause(allow_url,allow_mode,server_root="/var/www/"):
         print "No rules to allow"
 
 def readRules(silent,server_root="/var/www/"):
-    if not silent:
+    if silent:
         print (green + ("Here is a print out of the rules written to " + (server_root + "html/.htaccess") + colorEnd))
         rules = open((server_root + "html/.htaccess"),"r")
         for rule in rules:
             print rule.strip("\n")
         print "\n\n"
-def processing(redirection_options):
-    #Order of processing
-
-    # If Malleable C2 Then it will do it all in that function
-
-    # Else
-    # 1: IR Blacklisting
-    # 2: IP Blacklisting
-    # 3: UA Blacklisting
-    # 4: URI Blacklisting
-    # 5: Mobile Proxy/Redirect
-    # 6: Allow Clause
-    #Check if mod_rewrite is enabled
+def processing(redirection_options):   
     htaccessCheck(redirection_options['silent'],redirection_options['server_root'])
     setup = checkSetup(redirection_options['silent'],redirection_options['server_root'])
     if setup == False:
@@ -615,11 +611,8 @@ if __name__ == '__main__':
     if not os.geteuid() == 0:
         sys.exit('Script must be run as root')
 
-    parser = argparse.ArgumentParser(description='''apache_redirector_setup.py -- configure Apache to perform mod_rewrite redirection based on provided parameters.
-        You can use %REQUEST_URI% and %QUERY_STRING% to pass the original request's URI or Query String to the redirected URL.
-        Order of processing: block IPs, block IR, block, useragents, mobile redirection, 404, allow others''')
-    parser.add_argument('--h',help="prints the help menu",action='store_true')
-    parser.add_argument('--silent', help='Prevent all standard output',action='store_true')
+    parser = MyParser(description='''apache_redirector_setup.py''')
+    parser.add_argument('--silent', help='Prevent all standard output',action='store_false')
     parser.add_argument('--teamserver', help='The IP Address of your teamserver')
     parser.add_argument('--block_url', help='URL or file to redirect/proxy blocked requests to')
     parser.add_argument('--block_mode', help='PROXY or REDIRECT blocked requests (it is recommended you only proxy to resources you control)')
@@ -638,11 +631,6 @@ if __name__ == '__main__':
     parser.add_argument('--backup', help='Backs up current apache2 config and the html folder with the .bak extension.',action='store_true')
 
     args = parser.parse_args()
-
-
-    if args.h != None:
-        print help
-        sys.exit()
     
     if args.silent != None:
         redirection_options['silent'] = args.silent
