@@ -84,8 +84,8 @@ colorEnd = '\x1b[0m'
 mobile_string = 'android|blackberry|googlebot-mobile|iemobile|ipad|iphone|ipod|opera mobile|palmos|webos'
 ir_string = 'wget;curl;HTTrack;crawl;google;bot;b\-o\-t;spider;baidu;python'
 
-def htaccessCheck(silent,server_root="/var/www/"):
-    if os.path.isfile((server_root + "html/.htaccess")):
+def htaccessCheck(silent,server_root):
+    if os.path.isfile((server_root + ".htaccess")):
         if silent:
             print red + "An .htaccess file was found in the "+ server_root +" webroot!  This file will be overwritten with a new ruleset with this tool if you continue!" + colorEnd
             prompt = raw_input(yellow + "Would you like to backup this file before continuing?(Y/N):" + colorEnd + " ")
@@ -96,7 +96,7 @@ def htaccessCheck(silent,server_root="/var/www/"):
             else:
                 print red + "You didn't enter Y or N, so I don't know what you want!  I am going to exit now feel free to try again" + colorEnd
                 sys.exit()
-        os.remove(server_root + "html/.htaccess")
+        os.remove(server_root + ".htaccess")
 
 def backupFile(filename):
     f = open(filename, 'r')
@@ -110,7 +110,7 @@ def backupFile(filename):
         o.write(line)
     o.close()
 
-def checkSetup(silent,server_root="/var/www/"):
+def checkSetup(silent,server_root):
     try:
         if silent:
             print green + "Checking if Apache Server is Configured Correctly" + colorEnd
@@ -143,17 +143,17 @@ def checkSetup(silent,server_root="/var/www/"):
         setup = False
         return setup
 
-def backupConfig(silent,server_root="/var/www/"):
+def backupConfig(silent,server_root):
     if os.path.isfile("/etc/apache2/apache2.conf"):
         backupFile("/etc/apache2/apache2.conf")
         if silent:
             print green + "Apache2 Configuration backed up" + colorEnd
-    if os.path.isfile((server_root + "html/.htaccess")):
-        backupFile((server_root + "html/.htaccess"))
+    if os.path.isfile((server_root + ".htaccess")):
+        backupFile((server_root + ".htaccess"))
         if silent:
-            print green + ".htaccess file located at " + (server_root + "html/.htaccess") + " has been saved at " + (server_root + "html/.htaccess.bak") + colorEnd
+            print green + ".htaccess file located at " + (server_root + ".htaccess") + " has been saved at " + (server_root + "html/.htaccess.bak") + colorEnd
 
-def firstTimeSetup(silent,server_root="/var/www/"):
+def firstTimeSetup(silent,server_root):
     subprocess.call(["apt-get","install","apache2","-y","-qq"])
     subprocess.call(["a2enmod", "rewrite", "proxy", "proxy_http"])
     apache2config = open("/etc/apache2/apache2.conf", "r")
@@ -176,10 +176,10 @@ def firstTimeSetup(silent,server_root="/var/www/"):
     if silent:
         print green + "Configuration Complete!" + colorEnd
 
-def mobile_rule(mobile_URL,mobile_mode,server_root="/var/www/"):
+def mobile_rule(mobile_URL,mobile_mode,server_root):
 
-    if os.path.isfile((server_root + "html/.htaccess")):
-        old = open((server_root + "html/.htaccess"),"r")
+    if os.path.isfile((server_root + ".htaccess")):
+        old = open((server_root + ".htaccess"),"r")
         oldRules = []
         for line in old:
             oldRules.append(line)
@@ -190,7 +190,7 @@ def mobile_rule(mobile_URL,mobile_mode,server_root="/var/www/"):
             rule = rule + 'RewriteRule ^.*$ %s [L,R=302]\n' % mobile_URL
         elif mobile_mode == "proxy":
             rule = rule + 'RewriteRule ^.*$ %s [P]\n' % mobile_URL
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         for oldRule in oldRules:
             ruleFile.write(oldRule)
         ruleFile.write(rule)
@@ -200,13 +200,13 @@ def mobile_rule(mobile_URL,mobile_mode,server_root="/var/www/"):
         rule = "RewriteEngine On\n"
         rule = rule + 'RewriteCond %{HTTP_USER_AGENT} "android|blackberry|googlebot-mobile|iemobile|ipad|iphone|ipod|opera mobile|palmos|webos" [NC]\n'
         rule = rule + 'RewriteRule ^.*$ %s [P]\n' % mobile_URL
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         ruleFile.write(rule)
         ruleFile.close()
 
-def irSetup(block_url,block_mode,server_root="/var/www/"):
-    if os.path.isfile((server_root + "html/.htaccess")):
-        old = open((server_root + "html/.htaccess"),"r")
+def irSetup(block_url,block_mode,server_root):
+    if os.path.isfile((server_root + ".htaccess")):
+        old = open((server_root + ".htaccess"),"r")
         oldRules = []
         for line in old:
             if "RewriteEngine On" not in line:
@@ -219,7 +219,7 @@ def irSetup(block_url,block_mode,server_root="/var/www/"):
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [L,R=302]\n'
         elif block_mode == "proxy":
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         ruleFile.write(rule)
         for oldRule in oldRules:
             ruleFile.write(oldRule)
@@ -232,13 +232,13 @@ def irSetup(block_url,block_mode,server_root="/var/www/"):
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [L,R=302]\n'
         elif block_mode == "proxy":
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         ruleFile.write(rule)
         ruleFile.close()
 
-def ipBlacklisting(ips,block_url,block_mode,server_root="/var/www/"):
-    if os.path.isfile((server_root + "html/.htaccess")):
-        old = open((server_root + "html/.htaccess"),"r")
+def ipBlacklisting(ips,block_url,block_mode,server_root):
+    if os.path.isfile((server_root + ".htaccess")):
+        old = open((server_root + ".htaccess"),"r")
         oldRules = []
         counter = 0
         for line in old:
@@ -266,7 +266,7 @@ def ipBlacklisting(ips,block_url,block_mode,server_root="/var/www/"):
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [L,R=302]\n'
         elif block_mode == "proxy":
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         for oldRule in oldRules:
             ruleFile.write(oldRule)
         ruleFile.write(rule)
@@ -300,9 +300,9 @@ def ipBlacklisting(ips,block_url,block_mode,server_root="/var/www/"):
         ruleFile.write(rule)
         ruleFile.close()
 
-def validURI(uris, block_url, block_mode,server_root='/var/www/'):
-    if os.path.isfile((server_root + "html/.htaccess")):
-        old = open((server_root + "html/.htaccess"),"r")
+def validURI(uris, block_url, block_mode,server_root):
+    if os.path.isfile((server_root + ".htaccess")):
+        old = open((server_root + ".htaccess"),"r")
         oldRules = []
         finalURI = ''
         for line in old:
@@ -325,7 +325,7 @@ def validURI(uris, block_url, block_mode,server_root='/var/www/'):
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
         else:
             pass
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         for oldRule in oldRules:
             ruleFile.write(oldRule)
         ruleFile.write(rule)
@@ -350,13 +350,13 @@ def validURI(uris, block_url, block_mode,server_root='/var/www/'):
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
         else:
             pass
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         ruleFile.write(rule)
         ruleFile.close()
 
-def invalidURI(uris, block_url, block_mode,server_root='/var/www/'):
-    if os.path.isfile((server_root + "html/.htaccess")):
-        old = open((server_root + "html/.htaccess"),"r")
+def invalidURI(uris, block_url, block_mode,server_root):
+    if os.path.isfile((server_root + ".htaccess")):
+        old = open((server_root + ".htaccess"),"r")
         oldRules = []
         finalURI = ''
         for line in old:
@@ -379,7 +379,7 @@ def invalidURI(uris, block_url, block_mode,server_root='/var/www/'):
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
         else:
             pass
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         for oldRule in oldRules:
             ruleFile.write(oldRule)
         ruleFile.write(rule)
@@ -406,14 +406,14 @@ def invalidURI(uris, block_url, block_mode,server_root='/var/www/'):
             rule = rule + 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
         else:
             pass
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         ruleFile.write(rule)
         ruleFile.close()
 
 
-def blockUA(ua, block_url,block_mode,server_root="/var/www/"):
-    if os.path.isfile((server_root + "html/.htaccess")):
-        old = open((server_root + "html/.htaccess"),"r")
+def blockUA(ua, block_url,block_mode,server_root):
+    if os.path.isfile((server_root + ".htaccess")):
+        old = open((server_root + ".htaccess"),"r")
         oldRules = []
         for line in old:
             oldRules.append(line)
@@ -426,7 +426,7 @@ def blockUA(ua, block_url,block_mode,server_root="/var/www/"):
             rule += 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
         else:
             pass
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         for oldRule in oldRules:
             ruleFile.write(oldRule)
         ruleFile.write(rule)
@@ -442,13 +442,13 @@ def blockUA(ua, block_url,block_mode,server_root="/var/www/"):
             rule += 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
         else:
             pass
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         ruleFile.write(rule)
         ruleFile.close()
 
-def allowUA(ua, block_url,block_mode,server_root="/var/www/"):
-    if os.path.isfile((server_root + "html/.htaccess")):
-        old = open((server_root + "html/.htaccess"),"r")
+def allowUA(ua, block_url,block_mode,server_root):
+    if os.path.isfile((server_root + ".htaccess")):
+        old = open((server_root + ".htaccess"),"r")
         oldRules = []
         for line in old:
             oldRules.append(line)
@@ -464,7 +464,7 @@ def allowUA(ua, block_url,block_mode,server_root="/var/www/"):
             rule += 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
         else:
             pass
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         for oldRule in oldRules:
             ruleFile.write(oldRule)
         ruleFile.write(rule)
@@ -479,10 +479,10 @@ def allowUA(ua, block_url,block_mode,server_root="/var/www/"):
             rule += 'RewriteRule ^.*$ ' + block_url + '/? [P]\n'
         else:
             pass
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         ruleFile.write(rule)
         ruleFile.close()
-def malleableC2(profile, block_url, block_mode,server_root="/var/www/"):
+def malleableC2(profile, block_url, block_mode,server_root):
     c2profile = open(profile,'r')
     uris = []
     for line in c2profile:
@@ -495,7 +495,7 @@ def malleableC2(profile, block_url, block_mode,server_root="/var/www/"):
     allowUA(userAgent,block_url,block_mode,server_root)
     validURI(uris,block_url,block_mode,server_root)
 
-def Staging(profile, block_url, block_mode, allow_url, allow_mode, stagingURI="/updates/",server_root="/var/www/"):
+def Staging(profile, block_url, block_mode, allow_url, allow_mode, server_root, stagingURI="/updates/"):
     c2profile = open(profile,'r')
     uris = []
     for line in c2profile:
@@ -509,16 +509,16 @@ def Staging(profile, block_url, block_mode, allow_url, allow_mode, stagingURI="/
     stagingURIS2 = ["/.../"]
     invalidURI(stagingURIS," "," ",server_root)
     allowUA(" "," "," ",server_root)
-    allowClause(allow_url,allow_mode)
+    allowClause(allow_url,allow_mode,server_root)
     invalidURI(stagingURIS2," "," ",server_root)
     blockUA(userAgent," "," ",server_root)
-    allowClause(allow_url,allow_mode)
+    allowClause(allow_url,allow_mode,server_root)
     validURI(uris,block_url,block_mode,server_root)
     allowUA(userAgent,block_url,block_mode,server_root)
 
-def allowClause(allow_url,allow_mode,server_root="/var/www/"):
-    if os.path.isfile((server_root + "html/.htaccess")):
-        old = open((server_root + "html/.htaccess"),"r")
+def allowClause(allow_url,allow_mode,server_root):
+    if os.path.isfile((server_root + ".htaccess")):
+        old = open((server_root + ".htaccess"),"r")
         oldRules = []
         for line in old:
             oldRules.append(line)
@@ -527,7 +527,7 @@ def allowClause(allow_url,allow_mode,server_root="/var/www/"):
             rule = 'RewriteRule ^.*$ ' + allow_url + '%{REQUEST_URI} [L,R=302]\n'
         elif allow_mode == "proxy":
             rule = 'RewriteRule ^.*$ ' + allow_url + '%{REQUEST_URI} [P]\n'
-        ruleFile = open((server_root + "html/.htaccess"), "w")
+        ruleFile = open((server_root + ".htaccess"), "w")
         for oldRule in oldRules:
             ruleFile.write(oldRule)
         ruleFile.write(rule)
@@ -535,10 +535,10 @@ def allowClause(allow_url,allow_mode,server_root="/var/www/"):
     else:
         print "No rules to allow"
 
-def readRules(silent,server_root="/var/www/"):
+def readRules(silent,server_root):
     if silent:
-        print (green + ("Here is a print out of the rules written to " + (server_root + "html/.htaccess") + colorEnd))
-        rules = open((server_root + "html/.htaccess"),"r")
+        print (green + ("Here is a print out of the rules written to " + (server_root + ".htaccess") + colorEnd))
+        rules = open((server_root + ".htaccess"),"r")
         for rule in rules:
             print rule.strip("\n")
         print "\n\n"
@@ -553,7 +553,7 @@ def processing(redirection_options):
             malleableC2(redirection_options['malleable'],redirection_options['block_url'],redirection_options['block_mode'],redirection_options['server_root'])
         elif redirection_options['staging_uri'] != None:
             if (redirection_options['block_url'] != None) and (redirection_options['block_mode'] != None) and (redirection_options['allow_url'] != None) and (redirection_options['allow_mode'] != None):
-                Staging(redirection_options['malleable'],redirection_options['block_url'],redirection_options['block_mode'], redirection_options['allow_url'],redirection_options['allow_mode'],redirection_options['staging_uri'], redirection_options['server_root'])
+                Staging(redirection_options['malleable'],redirection_options['block_url'],redirection_options['block_mode'], redirection_options['allow_url'],redirection_options['allow_mode'],redirection_options['server_root'], redirection_options['staging_uri'])
             else:
                 print red + "In order to setup malleable C2 with staging support use the following flags, --malleable --staging_uri --block_url --block_mode --allow_url, --allow_mode" + colorEnd
         else:
@@ -691,7 +691,7 @@ if __name__ == '__main__':
     if args.server_root != None:
         redirection_options['server_root'] = args.server_root
     else:
-        redirection_options['server_root'] = "/var/www/"
+        redirection_options['server_root'] = "/var/www/html/"
     
     if args.invalid_uri != None:
         redirection_options['invalid_uri'] = args.invalid_uri
