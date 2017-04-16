@@ -111,6 +111,8 @@ def backupFile(filename):
     o.close()
 
 def checkSetup(silent,server_root):
+    if server_root=="/var/www/html/":
+        server_root="/var/www/"
     try:
         if silent:
             print green + "Checking if Apache Server is Configured Correctly" + colorEnd
@@ -154,8 +156,15 @@ def backupConfig(silent,server_root):
             print green + ".htaccess file located at " + (server_root + ".htaccess") + " has been saved at " + (server_root + "html/.htaccess.bak") + colorEnd
 
 def firstTimeSetup(silent,server_root):
-    subprocess.call(["apt-get","install","apache2","-y","-qq"])
-    subprocess.call(["a2enmod", "rewrite", "proxy", "proxy_http"])
+    if server_root == "/var/www/html/":
+        server_root="/var/www/"
+    if silent:
+        subprocess.call(["apt-get","install","apache2","-y","-qq"])
+        subprocess.call(["a2enmod", "rewrite", "proxy", "proxy_http"])
+    else:
+        FNULL = open(os.devnull, 'w')
+        subprocess.call(["apt-get","install","apache2","-y","-qq"],stdout=FNULL, stderr=subprocess.STDOUT)
+        subprocess.call(["a2enmod", "rewrite", "proxy", "proxy_http"],stdout=FNULL, stderr=subprocess.STDOUT)
     apache2config = open("/etc/apache2/apache2.conf", "r")
     configLineNumber = 0
     configEditLineNumber = 0
@@ -171,8 +180,11 @@ def firstTimeSetup(silent,server_root):
     for line in oldconfig:
         apache2config.write(line)
     apache2config.close()
+    if silent:
+        print yellow + "Restarting Apache to Enable New Configuration" + colorEnd
     subprocess.call(["service","apache2","restart"])
-    subprocess.call(["service","apache2","status"])
+    if silent:
+        subprocess.call(["service","apache2","status"])
     if silent:
         print green + "Configuration Complete!" + colorEnd
 
