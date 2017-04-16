@@ -16,7 +16,6 @@ class MyParser(argparse.ArgumentParser):
 
             --h                         Display's this menu
             --silent                    Prevent all standard output
-            --teamserver				IP Address of the teamserver
 
             --block_url					URL or file to redirect/proxy blocked requests to
             --block_mode				proxy or redirect blocked requests (it's recommended you only proxy to resources you control)\
@@ -66,10 +65,10 @@ class MyParser(argparse.ArgumentParser):
                 python apache_redirector_setup.py --ir --block_mode=redirect --block_url="https://google.com" --allow_url="<Teamserver Address>" --allow_mode="proxy"
             
             Setting up IP Blacklisting:
-                python apache_redirector_setup.py --ip_blacklist="<IP ADDRESS>" --block_mode="redirect" --block_url="https://google.com" --teamserver="<TEAMSERVER IP/DNS NAME>"
+                python apache_redirector_setup.py --ip_blacklist="<IP ADDRESS>" --block_mode="redirect" --block_url="https://google.com" --allow_url="<Teamserver Address>" --allow_mode="proxy"
 
             Setting up Mobile Redirection, IR Blacklisting, and IP Blacklisting:
-                python apache_redirector_setup.py --ip_blacklist="<IP ADDRESS>" --ip_blacklist="<IP ADDRESS>" --mobile_url="<Mobile Payload>" --teamserver="<IP ADDRESS/DNS NAME>" --mobile_mode=proxy --allow_url="<Teamserver Address>" --allow_mode="proxy"
+                python apache_redirector_setup.py --ip_blacklist="<IP ADDRESS>" --ip_blacklist="<IP ADDRESS>" --mobile_url="<Mobile Payload>"  --mobile_mode=proxy --allow_url="<Teamserver Address>" --allow_mode="proxy"
         '''
         print help1
         exit(-1)
@@ -525,7 +524,7 @@ def Staging(profile, block_url, block_mode, allow_url, allow_mode, server_root, 
     invalidURI(stagingURIS2," "," ",server_root)
     blockUA(userAgent," "," ",server_root)
     allowClause(allow_url,allow_mode,server_root)
-    validURI(uris,block_url,block_mode,server_root)
+    validURI(uris," "," ",server_root)
     allowUA(userAgent,block_url,block_mode,server_root)
 
 def allowClause(allow_url,allow_mode,server_root):
@@ -607,7 +606,7 @@ def processing(redirection_options):
         else:
             print red + "In order to set an allow rule use,  --allow_url, and --allow_mode" + colorEnd
     
-    if os.path.isfile((redirection_options['server_root'] + "html/.htaccess")):
+    if os.path.isfile((redirection_options['server_root'] + ".htaccess")):
         readRules(redirection_options['silent'],redirection_options['server_root'])
 
 
